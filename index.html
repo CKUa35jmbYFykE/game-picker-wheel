@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ── Primary SEO ── -->
+<title>Game Roulette – Random Game Picker & Wheel Spinner</title>
+<meta name="description" content="Can't decide what to play? Spin the wheel! Game Roulette randomly picks your next game from Steam tags like roguelike, co-op, RPG, and more. Free random game picker online.">
+<meta name="keywords" content="random game picker, game roulette, spin the wheel game, what game should I play, random game selector, steam game picker, game wheel spinner, random video game, game chooser, what to play tonight">
+<meta name="author" content="Game Roulette">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://gameroulette.netlify.app/">
+
+<!-- ── Open Graph (Facebook, Discord, Slack previews) ── -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gameroulette.netlify.app/">
+<meta property="og:title" content="Game Roulette – Spin to Pick Your Next Game">
+<meta property="og:description" content="Can't decide what to play? Spin the wheel and let fate choose your next game. Filter by Steam tags like roguelike, co-op, RPG and more.">
+<meta property="og:image" content="https://gameroulette.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:site_name" content="Game Roulette">
+
+<!-- ── Twitter / X Card ── -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://gameroulette.netlify.app/">
+<meta name="twitter:title" content="Game Roulette – Spin to Pick Your Next Game">
+<meta name="twitter:description" content="Can't decide what to play? Spin the wheel and let fate choose your next game. Filter by Steam tags like roguelike, co-op, RPG and more.">
+<meta name="twitter:image" content="https://gameroulette.netlify.app/og-image.png">
+
+<!-- ── Structured Data (Google rich results) ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Game Roulette",
+  "url": "https://gameroulette.netlify.app/",
+  "description": "A free online random game picker. Spin a wheel to choose your next video game from Steam tags like roguelike, co-op, RPG, FPS, and more.",
+  "applicationCategory": "GameApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires JavaScript",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Random game picker",
+    "Steam tag filtering",
+    "Spinning wheel animation",
+    "Sound effects",
+    "Custom game list"
+  ],
+  "keywords": "random game picker, game roulette, spin the wheel, steam game selector"
+}
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-red: #ff2244;
+    --neon-cyan: #00f5ff;
+    --neon-yellow: #ffe600;
+    --neon-green: #39ff14;
+    --neon-purple: #bf00ff;
+    --bg: #050508;
+    --panel: #0a0a12;
+    --border: #1a1a2e;
+    --text: #e8e8f0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,245,255,0.015) 40px, rgba(0,245,255,0.015) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,245,255,0.015) 40px, rgba(0,245,255,0.015) 41px);
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    position: relative;
+  }
+
+  .title {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    color: var(--neon-cyan);
+    text-shadow:
+      0 0 10px var(--neon-cyan),
+      0 0 30px var(--neon-cyan),
+      0 0 60px rgba(0,245,255,0.4);
+    letter-spacing: 0.1em;
+    animation: flicker 8s infinite;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  @keyframes flicker {
+    0%, 95%, 100% { opacity: 1; }
+    96% { opacity: 0.8; }
+    97% { opacity: 1; }
+    98% { opacity: 0.6; }
+    99% { opacity: 1; }
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    gap: 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 1rem 2rem 3rem;
+    align-items: start;
+  }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    position: relative;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: 10px; right: 10px;
+    height: 2px;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+  }
+
+  .panel-title {
+    font-family: 'Black Ops One', cursive;
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--neon-cyan);
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+  }
+
+  /* ── STEAM INPUT ── */
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .input-group label {
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+  }
+
+  input[type="text"], input[type="number"] {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1rem;
+    padding: 0.5rem 0.8rem;
+    width: 100%;
+    transition: border-color 0.2s;
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(0,245,255,0.2);
+  }
+
+  /* ── TAGS ── */
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+  }
+
+  .tag {
+    background: rgba(0,245,255,0.08);
+    border: 1px solid rgba(0,245,255,0.25);
+    border-radius: 2px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+    letter-spacing: 0.05em;
+  }
+
+  .tag:hover { background: rgba(0,245,255,0.15); }
+  .tag.active {
+    background: rgba(0,245,255,0.2);
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+    text-shadow: 0 0 6px var(--neon-cyan);
+  }
+
+  .tag-input-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .tag-input-row input { flex: 1; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'Black Ops One', cursive;
+    letter-spacing: 0.1em;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .btn-sm {
+    background: rgba(0,245,255,0.1);
+    border: 1px solid rgba(0,245,255,0.3);
+    color: var(--neon-cyan);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+    letter-spacing: 0.1em;
+  }
+
+  .btn-sm:hover {
+    background: rgba(0,245,255,0.2);
+    box-shadow: 0 0 10px rgba(0,245,255,0.2);
+  }
+
+  .btn-fetch {
+    width: 100%;
+    padding: 0.7rem;
+    background: rgba(0,245,255,0.08);
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn-fetch:hover:not(:disabled) {
+    background: rgba(0,245,255,0.15);
+    box-shadow: 0 0 15px rgba(0,245,255,0.3);
+  }
+
+  .btn-fetch:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── SPIN BUTTON ── */
+  .spin-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  .wheel-wrap {
+    position: relative;
+    width: 500px;
+    height: 500px;
+    max-width: 90vw;
+    max-height: 90vw;
+  }
+
+  .wheel-pointer {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-top: 18px solid transparent;
+    border-bottom: 18px solid transparent;
+    border-right: 36px solid var(--neon-red);
+    filter: drop-shadow(0 0 6px var(--neon-red));
+    z-index: 10;
+  }
+
+  canvas#wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 4px #111,
+      0 0 0 6px rgba(0,245,255,0.3),
+      0 0 40px rgba(0,245,255,0.15),
+      0 0 80px rgba(0,0,0,0.8);
+  }
+
+  .wheel-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px; height: 60px;
+    background: #111;
+    border-radius: 50%;
+    border: 3px solid rgba(0,245,255,0.4);
+    box-shadow: 0 0 15px rgba(0,245,255,0.3);
+    z-index: 5;
+  }
+
+  #spinBtn {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff4466, #cc0022);
+    border: none;
+    color: white;
+    font-family: 'Black Ops One', cursive;
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    box-shadow:
+      0 0 0 6px #1a0008,
+      0 0 0 8px rgba(255,34,68,0.4),
+      0 0 30px rgba(255,34,68,0.3),
+      inset 0 -8px 20px rgba(0,0,0,0.4);
+    transition: all 0.1s;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  #spinBtn::after {
+    content: '';
+    position: absolute;
+    top: 12%; left: 20%;
+    width: 50%; height: 25%;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    filter: blur(4px);
+  }
+
+  #spinBtn:hover:not(:disabled) {
+    transform: scale(1.04);
+    box-shadow:
+      0 0 0 6px #1a0008,
+      0 0 0 8px rgba(255,34,68,0.6),
+      0 0 50px rgba(255,34,68,0.5),
+      inset 0 -8px 20px rgba(0,0,0,0.4);
+  }
+
+  #spinBtn:active:not(:disabled) {
+    transform: scale(0.97);
+    box-shadow:
+      0 0 0 6px #1a0008,
+      0 0 0 8px rgba(255,34,68,0.3),
+      0 0 15px rgba(255,34,68,0.2),
+      inset 0 2px 10px rgba(0,0,0,0.6);
+  }
+
+  #spinBtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── RESULT ── */
+  #result {
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.4em;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  .result-name {
+    font-family: 'Black Ops One', cursive;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px var(--neon-yellow), 0 0 30px rgba(255,230,0,0.4);
+    animation: resultPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes resultPop {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── GAME LIST ── */
+  .game-list-wrap {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .game-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.4rem 0.3rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.1s;
+    border-radius: 2px;
+  }
+
+  .game-item:hover { background: rgba(255,255,255,0.04); }
+
+  .game-item input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--neon-cyan);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .game-item img {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .game-item-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-count {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 0.8rem;
+  }
+
+  .select-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+  }
+
+  /* ── STATUS ── */
+  .status {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.1em;
+    text-align: center;
+    min-height: 1.2em;
+    margin-top: 0.5rem;
+  }
+
+  .status.error { color: var(--neon-red); }
+  .status.ok { color: var(--neon-green); }
+
+  /* ── MANUAL GAMES ── */
+  .manual-add-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .manual-add-row input { flex: 1; font-size: 0.85rem; }
+
+  /* spinner */
+  .loader {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,245,255,0.2);
+    border-top-color: var(--neon-cyan);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* CRT corners */
+  .crt-corner {
+    position: fixed;
+    width: 60px; height: 60px;
+    pointer-events: none;
+    z-index: 999;
+  }
+  .crt-corner::before, .crt-corner::after {
+    content: '';
+    position: absolute;
+    background: var(--neon-cyan);
+    box-shadow: 0 0 8px var(--neon-cyan);
+  }
+  .crt-corner::before { width: 2px; height: 30px; }
+  .crt-corner::after { width: 30px; height: 2px; }
+  .crt-tl { top: 20px; left: 20px; }
+  .crt-tr { top: 20px; right: 20px; transform: scaleX(-1); }
+  .crt-bl { bottom: 20px; left: 20px; transform: scaleY(-1); }
+  .crt-br { bottom: 20px; right: 20px; transform: scale(-1); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .wheel-wrap { width: 340px; height: 340px; }
+    #spinBtn { width: 130px; height: 130px; font-size: 1.2rem; }
+    .crt-corner { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt-corner crt-tl"></div>
+<div class="crt-corner crt-tr"></div>
+<div class="crt-corner crt-bl"></div>
+<div class="crt-corner crt-br"></div>
+
+<header>
+  <div class="title">GAME ROULETTE</div>
+  <div class="subtitle">Insert Quarter to Continue</div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: Steam + Tags -->
+  <aside class="panel">
+    <div class="panel-title">// Steam Config</div>
+
+    <div class="input-group">
+      <label>Steam Tag</label>
+      <div class="tag-input-row">
+        <input type="text" id="tagInput" placeholder="e.g. roguelike" />
+        <button class="btn btn-sm" onclick="addTag()">+</button>
+      </div>
+    </div>
+
+    <div class="tag-list" id="tagList"></div>
+
+    <div class="input-group">
+      <label>Max Results</label>
+      <input type="number" id="maxResults" value="20" min="5" max="50" />
+    </div>
+
+    <button class="btn btn-fetch" id="fetchBtn" onclick="fetchSteamGames()">
+      Fetch Games from Steam
+    </button>
+    <div class="status" id="fetchStatus"></div>
+
+    <hr style="border-color: var(--border); margin: 1.2rem 0;">
+
+    <div class="panel-title">// Manual Add</div>
+    <div class="manual-add-row">
+      <input type="text" id="manualInput" placeholder="Game name" onkeydown="if(event.key==='Enter')addManual()" />
+      <button class="btn btn-sm" onclick="addManual()">+</button>
+    </div>
+  </aside>
+
+  <!-- CENTER: Wheel + Spin -->
+  <section class="spin-zone">
+    <div class="wheel-wrap">
+      <canvas id="wheel" width="500" height="500"></canvas>
+      <div class="wheel-pointer"></div>
+      <div class="wheel-center"></div>
+    </div>
+
+    <button id="spinBtn" onclick="spin()">SPIN</button>
+
+    <div id="result">
+      <div class="result-label">Spin to select a game</div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Game List -->
+  <aside class="panel">
+    <div class="panel-title">// Game Pool</div>
+    <div class="game-count" id="gameCount">0 games</div>
+    <div class="select-row">
+      <button class="btn btn-sm" onclick="selectAll(true)">All</button>
+      <button class="btn btn-sm" onclick="selectAll(false)">None</button>
+      <button class="btn btn-sm" onclick="clearGames()" style="margin-left:auto;border-color:rgba(255,34,68,0.3);color:#ff6680;">Clear</button>
+    </div>
+    <div class="game-list-wrap">
+      <div id="gameList"></div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────
+let games = []; // { name, icon, enabled }
+let activeTags = [];
+let currentAngle = 0;
+let spinning = false;
+
+const SLICE_COLORS = [
+  '#1a0a2e','#0a1a2e','#1a2e0a','#2e1a0a',
+  '#0a2e2e','#2e0a1a','#1a1a2e','#2e2e0a',
+  '#0a2e0a','#2e0a2e','#0a0a2e','#2e1a1a',
+];
+
+const ACCENT_COLORS = [
+  '#bf00ff','#00f5ff','#39ff14','#ffe600',
+  '#ff2244','#ff8c00','#00bfff','#ff69b4',
+  '#7fff00','#ff4500','#00ff7f','#ffd700',
+];
+
+// ─── AUDIO ───────────────────────────────────────────────
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTick() {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(800 + Math.random() * 400, ctx.currentTime);
+  gain.gain.setValueAtTime(0.08, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.04);
+  osc.start(); osc.stop(ctx.currentTime + 0.04);
+}
+
+function playWin() {
+  const ctx = getAudio();
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + i * 0.12 + 0.25);
+    osc.start(ctx.currentTime + i * 0.12);
+    osc.stop(ctx.currentTime + i * 0.12 + 0.25);
+  });
+}
+
+function playSpinStart() {
+  const ctx = getAudio();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(150, ctx.currentTime);
+  osc.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.2);
+  gain.gain.setValueAtTime(0.12, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+  osc.start(); osc.stop(ctx.currentTime + 0.2);
+}
+
+// ─── TAGS ────────────────────────────────────────────────
+function addTag() {
+  const val = document.getElementById('tagInput').value.trim();
+  if (!val || activeTags.includes(val)) return;
+  activeTags.push(val);
+  document.getElementById('tagInput').value = '';
+  renderTags();
+}
+
+document.getElementById('tagInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTag();
+});
+
+function removeTag(tag) {
+  activeTags = activeTags.filter(t => t !== tag);
+  renderTags();
+}
+
+function renderTags() {
+  const container = document.getElementById('tagList');
+  // Preset tags
+  const presets = ['roguelike','co-op','RPG','FPS','strategy','puzzle','platformer','horror','indie','simulation'];
+  container.innerHTML = presets.map(t =>
+    `<span class="tag ${activeTags.includes(t) ? 'active' : ''}" onclick="togglePreset('${t}')">${t}</span>`
+  ).join('') +
+  activeTags.filter(t => !presets.includes(t)).map(t =>
+    `<span class="tag active" onclick="removeTag('${t}')">${t} ✕</span>`
+  ).join('');
+}
+
+function togglePreset(tag) {
+  if (activeTags.includes(tag)) activeTags = activeTags.filter(t => t !== tag);
+  else activeTags.push(tag);
+  renderTags();
+}
+
+renderTags();
+
+// ─── STEAM FETCH ─────────────────────────────────────────
+async function fetchSteamGames() {
+  const btn = document.getElementById('fetchBtn');
+  const status = document.getElementById('fetchStatus');
+  const maxResults = parseInt(document.getElementById('maxResults').value) || 20;
+
+  if (activeTags.length === 0) {
+    status.textContent = 'Add at least one tag first';
+    status.className = 'status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>Fetching...';
+  status.textContent = '';
+  status.className = 'status';
+
+  try {
+    const tag = activeTags[0]; // Steam search works best with one tag at a time
+    const url = `/.netlify/functions/steam?tag=${encodeURIComponent(tag)}&count=${maxResults}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) {
+      throw new Error('No games found for that tag');
+    }
+
+    // Add fetched games, avoid duplicates
+    let added = 0;
+    for (const item of data.items) {
+      if (!games.find(g => g.name === item.name)) {
+        games.push({ name: item.name, icon: item.icon, appid: item.appid, enabled: true });
+        added++;
+      }
+    }
+
+    status.textContent = `✓ Added ${added} games`;
+    status.className = 'status ok';
+    renderGameList();
+    drawWheel();
+  } catch (err) {
+    console.error(err);
+    status.textContent = `✗ ${err.message} — try adding games manually`;
+    status.className = 'status error';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Fetch Games from Steam';
+  }
+}
+
+// ─── MANUAL ADD ──────────────────────────────────────────
+function addManual() {
+  const input = document.getElementById('manualInput');
+  const name = input.value.trim();
+  if (!name) return;
+  if (!games.find(g => g.name === name)) {
+    games.push({ name, icon: null, enabled: true });
+    renderGameList();
+    drawWheel();
+  }
+  input.value = '';
+}
+
+// ─── GAME LIST UI ────────────────────────────────────────
+function renderGameList() {
+  const container = document.getElementById('gameList');
+  document.getElementById('gameCount').textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+
+  if (games.length === 0) {
+    container.innerHTML = '<div style="color:rgba(255,255,255,0.2);font-size:0.85rem;padding:0.5rem 0">No games yet. Fetch from Steam or add manually.</div>';
+    return;
+  }
+
+  container.innerHTML = games.map((g, i) => `
+    <div class="game-item" onclick="toggleGame(${i})">
+      <input type="checkbox" ${g.enabled ? 'checked' : ''} onclick="event.stopPropagation();toggleGame(${i})" />
+      ${g.icon ? `<img src="${g.icon}" alt="" onerror="this.style.display='none'">` : '<div style="width:32px;height:32px;background:rgba(255,255,255,0.05);border-radius:2px;flex-shrink:0;"></div>'}
+      <span class="game-item-name">${escHtml(g.name)}</span>
+      <span onclick="event.stopPropagation();removeGame(${i})" style="color:rgba(255,100,100,0.4);cursor:pointer;padding:0 4px;font-size:0.8rem;">✕</span>
+    </div>
+  `).join('');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toggleGame(i) {
+  games[i].enabled = !games[i].enabled;
+  renderGameList();
+  drawWheel();
+}
+
+function removeGame(i) {
+  games.splice(i, 1);
+  renderGameList();
+  drawWheel();
+}
+
+function selectAll(state) {
+  games.forEach(g => g.enabled = state);
+  renderGameList();
+  drawWheel();
+}
+
+function clearGames() {
+  if (games.length === 0) return;
+  if (confirm('Clear all games?')) {
+    games = [];
+    renderGameList();
+    drawWheel();
+    document.getElementById('result').innerHTML = '<div class="result-label">Spin to select a game</div>';
+  }
+}
+
+// ─── WHEEL DRAWING ───────────────────────────────────────
+const canvas = document.getElementById('wheel');
+const ctx2d = canvas.getContext('2d');
+const W = 500, H = 500, CX = W / 2, CY = H / 2, R = 230;
+
+function drawWheel() {
+  ctx2d.clearRect(0, 0, W, H);
+  const enabled = games.filter(g => g.enabled);
+
+  if (enabled.length === 0) {
+    ctx2d.save();
+    ctx2d.fillStyle = '#111';
+    ctx2d.beginPath(); ctx2d.arc(CX, CY, R, 0, Math.PI * 2); ctx2d.fill();
+    ctx2d.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx2d.font = '600 18px Rajdhani, sans-serif';
+    ctx2d.textAlign = 'center';
+    ctx2d.fillText('Add games to spin!', CX, CY);
+    ctx2d.restore();
+    return;
+  }
+
+  const sliceAngle = (Math.PI * 2) / enabled.length;
+
+  enabled.forEach((game, i) => {
+    const start = currentAngle + i * sliceAngle;
+    const end = start + sliceAngle;
+    const accent = ACCENT_COLORS[i % ACCENT_COLORS.length];
+    const base = SLICE_COLORS[i % SLICE_COLORS.length];
+
+    // Slice fill
+    ctx2d.beginPath();
+    ctx2d.moveTo(CX, CY);
+    ctx2d.arc(CX, CY, R, start, end);
+    ctx2d.closePath();
+    ctx2d.fillStyle = base;
+    ctx2d.fill();
+
+    // Accent arc at edge
+    ctx2d.beginPath();
+    ctx2d.arc(CX, CY, R - 2, start, end);
+    ctx2d.lineWidth = 10;
+    ctx2d.strokeStyle = accent;
+    ctx2d.globalAlpha = 0.6;
+    ctx2d.stroke();
+    ctx2d.globalAlpha = 1;
+
+    // Divider lines
+    ctx2d.beginPath();
+    ctx2d.moveTo(CX, CY);
+    ctx2d.lineTo(CX + R * Math.cos(start), CY + R * Math.sin(start));
+    ctx2d.lineWidth = 1.5;
+    ctx2d.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx2d.stroke();
+
+    // Label
+    const mid = start + sliceAngle / 2;
+    const labelR = R * 0.62;
+    const tx = CX + labelR * Math.cos(mid);
+    const ty = CY + labelR * Math.sin(mid);
+
+    ctx2d.save();
+    ctx2d.translate(tx, ty);
+    ctx2d.rotate(mid + Math.PI / 2);
+
+    const fontSize = Math.max(9, Math.min(14, 280 / enabled.length));
+    ctx2d.font = `600 ${fontSize}px Rajdhani, sans-serif`;
+    ctx2d.fillStyle = '#fff';
+    ctx2d.textAlign = 'center';
+    ctx2d.shadowColor = accent;
+    ctx2d.shadowBlur = 4;
+
+    const label = game.name.length > 18 ? game.name.slice(0, 16) + '…' : game.name;
+    ctx2d.fillText(label, 0, fontSize / 3);
+    ctx2d.restore();
+  });
+
+  // Outer ring
+  ctx2d.beginPath();
+  ctx2d.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx2d.lineWidth = 3;
+  ctx2d.strokeStyle = 'rgba(0,245,255,0.4)';
+  ctx2d.stroke();
+}
+
+drawWheel();
+renderGameList();
+
+// ─── SPIN LOGIC ──────────────────────────────────────────
+function getEnabledGames() {
+  return games.filter(g => g.enabled);
+}
+
+function spin() {
+  const enabled = getEnabledGames();
+  if (spinning || enabled.length === 0) return;
+  spinning = true;
+
+  const spinBtn = document.getElementById('spinBtn');
+  spinBtn.disabled = true;
+  document.getElementById('result').innerHTML = '<div class="result-label">Spinning...</div>';
+
+  playSpinStart();
+
+  // Pick winner
+  const winIndex = Math.floor(Math.random() * enabled.length);
+  const sliceAngle = (Math.PI * 2) / enabled.length;
+
+  // We want the pointer (at 0 radians = right side) to land at the center of winIndex slice
+  // currentAngle is the rotation applied. Pointer is at angle 0 (right).
+  // Slice i occupies [currentAngle + i*sliceAngle, currentAngle + (i+1)*sliceAngle]
+  // Center of slice i is at currentAngle + (i+0.5)*sliceAngle
+  // We want that center to equal 0 (mod 2π) → target rotation offset
+
+  const targetSliceCenter = -(winIndex + 0.5) * sliceAngle;
+  // Add multiple full rotations for drama
+  const spins = 6 + Math.floor(Math.random() * 4); // 6-9 full rotations
+  const totalRotation = spins * Math.PI * 2 + (targetSliceCenter - (currentAngle % (Math.PI * 2)));
+
+  const duration = 4000 + Math.random() * 1500;
+  const startAngle = currentAngle;
+  const startTime = performance.now();
+
+  let lastTickAngle = startAngle;
+  let lastTickTime = 0;
+
+  function easeOut(t) {
+    return 1 - Math.pow(1 - t, 4);
+  }
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const easedT = easeOut(t);
+
+    currentAngle = startAngle + totalRotation * easedT;
+    drawWheel();
+
+    // Tick sound — speed based
+    const speed = Math.abs(totalRotation * (1 - Math.pow(1 - t, 3)) / duration * 1000);
+    const tickInterval = Math.max(40, 400 / speed);
+    const angleDiff = Math.abs(currentAngle - lastTickAngle) * (180 / Math.PI);
+
+    if (angleDiff > (enabled.length > 1 ? 360 / enabled.length * 0.9 : 30) && now - lastTickTime > tickInterval) {
+      playTick();
+      lastTickAngle = currentAngle;
+      lastTickTime = now;
+    }
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      currentAngle = startAngle + totalRotation;
+      drawWheel();
+      spinning = false;
+      spinBtn.disabled = false;
+      playWin();
+      showResult(enabled[winIndex]);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function showResult(game) {
+  const result = document.getElementById('result');
+  result.innerHTML = `
+    <div class="result-label">🎮 Tonight you're playing...</div>
+    <div class="result-name">${escHtml(game.name)}</div>
+    ${game.appid ? `<a href="https://store.steampowered.com/app/${game.appid}" target="_blank" style="color:rgba(0,245,255,0.6);font-size:0.8rem;text-decoration:none;margin-top:0.4rem;display:block;letter-spacing:0.1em;">View on Steam →</a>` : ''}
+  `;
+}
+
+// Seed with some default games so the wheel isn't empty
+const defaults = [
+  'Hollow Knight','Hades','Celeste','Stardew Valley',
+  'Deep Rock Galactic','Among Us','Terraria','Minecraft'
+];
+defaults.forEach(name => games.push({ name, icon: null, enabled: true }));
+renderGameList();
+drawWheel();
+</script>
+
+<!-- ── SEO Content (visible to crawlers, subtle to users) ── -->
+<footer style="max-width:800px;margin:0 auto;padding:2rem 2rem 3rem;color:rgba(255,255,255,0.18);font-size:0.8rem;line-height:1.8;letter-spacing:0.03em;border-top:1px solid #0f0f1a;text-align:center;">
+  <p><strong style="color:rgba(255,255,255,0.28)">Game Roulette</strong> — the free random game picker for indecisive gamers.</p>
+  <p style="margin-top:0.6rem">
+    Can't decide what to play tonight? Add your games, hit SPIN, and let the wheel choose.
+    Filter by Steam tags like <em>roguelike</em>, <em>co-op</em>, <em>RPG</em>, <em>FPS</em>, <em>strategy</em>, <em>horror</em>, and more.
+    Works as a random game selector, game wheel spinner, or a what-to-play-tonight decider.
+  </p>
+  <p style="margin-top:0.6rem">Free &middot; No account required &middot; Works in any browser</p>
+</footer>
+</body>
+</html>
