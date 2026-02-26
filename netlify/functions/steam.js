@@ -25,58 +25,11 @@ exports.handler = async (event) => {
   }
 
   try {
-    // Steam store search by tag
-    const url = `https://store.steampowered.com/search/results/?tags=${encodeURIComponent(tag)}&json=1&count=${count}&cc=US&l=en`;
+    // Use Steam's search endpoint with the tag as a search term AND as a tag filter
+    // Two strategies tried in sequence for resilience
+    const items = await fetchByTag(tag, count) || await fetchByTerm(tag, count);
 
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; GameRouletteBot/1.0)',
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error(`Steam returned ${res.status}`);
-    }
-
-    const raw = await res.text();
-
-    // Steam returns either JSON or HTML — parse carefully
-    let data;
-    try {
-      data = JSON.parse(raw);
-    } catch {
-      throw new Error('Steam returned non-JSON response');
-    }
-
-    // Extract game items from Steam's response
-    // Steam search results come back as HTML in data.results_html
-    // Parse it to pull out app IDs and names
-    const items = [];
-
-    if (data.results_html) {
-      // Extract appids and names from the HTML blob using regex
-      const appIdRe = /data-ds-appid="(\d+)"/g;
-      const nameRe = /class="title"[^>]*>([^<]+)<\/span>/g;
-      const imgRe = /src="https:\/\/cdn\.akamai\.steamstatic\.com\/steam\/apps\/(\d+)\/capsule_sm_120\.jpg"/g;
-
-      const appIds = [];
-      const names = [];
-      let m;
-
-      while ((m = appIdRe.exec(data.results_html)) !== null) appIds.push(m[1]);
-      while ((m = nameRe.exec(data.results_html)) !== null) names.push(m[1].trim());
-
-      for (let i = 0; i < Math.min(appIds.length, names.length, count); i++) {
-        items.push({
-          appid: appIds[i],
-          name: names[i],
-          icon: `https://cdn.akamai.steamstatic.com/steam/apps/${appIds[i]}/capsule_sm_120.jpg`,
-        });
-      }
-    }
-
-    if (items.length === 0) {
+    if (!items || items.length === 0) {
       return {
         statusCode: 200,
         headers,
@@ -87,7 +40,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ items, total: data.total_count || items.length }),
+      body: JSON.stringify({ items }),
     };
 
   } catch (err) {
@@ -99,3 +52,89 @@ exports.handler = async (event) => {
     };
   }
 };
+
+// Strategy 1: Search using Steam's tag filter (tag ID lookup not needed — term works)
+async function fetchByTag(tag, count) {
+  try {
+    const url = `https://store.steampowered.com/search/results/?term=${encodeURIComponent(tag)}&json=1&count=${count}&cc=US&l=english&category1=998`;
+    const res = await fetch(url, { headers: steamHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return parseResultsHtml(data.results_html, count);
+  } catch {
+    return null;
+  }
+}
+
+// Strategy 2: Plain term search — broader but reliable
+async function fetchByTerm(tag, count) {
+  try {
+    const url = `https://store.steampowered.com/search/results/?term=${encodeURIComponent(tag)}&json=1&count=${count}&cc=US&l=english`;
+    const res = await fetch(url, { headers: steamHeaders() });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return parseResultsHtml(data.results_html, count);
+  } catch {
+    return null;
+  }
+}
+
+function steamHeaders() {
+  return {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/json, text/javascript, */*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://store.steampowered.com/',
+  };
+}
+
+function parseResultsHtml(html, count) {
+  if (!html) return null;
+  const items = [];
+
+  // Match app entries — Steam wraps each result in an <a> with data-ds-appid
+  // We extract appid, then derive name from the inner span
+  // Multiple regex patterns for resilience across Steam HTML variations
+
+  // Pattern A: data-ds-appid paired with a title span nearby
+  const blockRe = /data-ds-appid="(\d+)"[\s\S]{0,800}?<span[^>]+class="[^"]*title[^"]*"[^>]*>([^<]+)<\/span>/g;
+  let m;
+  while ((m = blockRe.exec(html)) !== null && items.length < count) {
+    const appid = m[1];
+    const name = m[2].trim();
+    if (appid && name && !items.find(i => i.appid === appid)) {
+      items.push({
+        appid,
+        name,
+        icon: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/capsule_sm_120.jpg`,
+      });
+    }
+  }
+
+  // Pattern B: fallback — grab all appids and all titles separately, zip them
+  if (items.length === 0) {
+    const appIds = [...html.matchAll(/data-ds-appid="(\d+)"/g)].map(m => m[1]);
+    // Try different title class patterns Steam has used
+    const titlePatterns = [
+      /class="[^"]*title[^"]*"[^>]*>\s*([^<]+)\s*<\/span>/g,
+      /class="[^"]*search_name[^"]*"[^>]*>\s*([^<]+)\s*<\//g,
+      /<span[^>]+>\s*([A-Z][^<]{2,60})\s*<\/span>/g,
+    ];
+
+    let names = [];
+    for (const pattern of titlePatterns) {
+      names = [...html.matchAll(pattern)].map(m => m[1].trim()).filter(n => n.length > 1);
+      if (names.length > 0) break;
+    }
+
+    for (let i = 0; i < Math.min(appIds.length, names.length, count); i++) {
+      items.push({
+        appid: appIds[i],
+        name: names[i],
+        icon: `https://cdn.cloudflare.steamstatic.com/steam/apps/${appIds[i]}/capsule_sm_120.jpg`,
+      });
+    }
+  }
+
+  return items.length > 0 ? items : null;
+}
